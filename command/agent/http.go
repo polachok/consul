@@ -257,6 +257,7 @@ func (s *HTTPServer) registerHandlers(enableDebug bool) {
 	s.handleFuncMetrics("/v1/agent/monitor", s.wrap(s.AgentMonitor))
 	s.handleFuncMetrics("/v1/agent/services", s.wrap(s.AgentServices))
 	s.handleFuncMetrics("/v1/agent/checks", s.wrap(s.AgentChecks))
+	s.handleFuncMetrics("/v1/agent/health", s.wrap(s.AgentHealth))
 	s.handleFuncMetrics("/v1/agent/members", s.wrap(s.AgentMembers))
 	s.handleFuncMetrics("/v1/agent/join/", s.wrap(s.AgentJoin))
 	s.handleFuncMetrics("/v1/agent/leave", s.wrap(s.AgentLeave))

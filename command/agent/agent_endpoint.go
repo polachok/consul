@@ -110,6 +110,45 @@ func (s *HTTPServer) AgentChecks(resp http.ResponseWriter, req *http.Request) (i
 	return checks, nil
 }
 
+func (s *HTTPServer) AgentHealth(resp http.ResponseWriter, req *http.Request) (interface{}, error) {
+	// Fetch the ACL token, if any.
+	var token string
+	s.parseToken(req, &token)
+	type health struct {
+		Service *structs.NodeService
+		Checks []*structs.HealthCheck
+	}
+	checksPerService := make(map[string]([]*structs.HealthCheck))
+
+	services := s.agent.state.Services()
+	if err := s.agent.filterServices(token, &services); err != nil {
+		return nil, err
+	}
+	checks := s.agent.state.Checks()
+	if err := s.agent.filterChecks(token, &checks); err != nil {
+		return nil, err
+	}
+
+	for _, v := range checks {
+		val, found := checksPerService[v.ServiceID]
+		if !found {
+			val = make([]*structs.HealthCheck, 0)
+		}
+		val = append(val, v)
+		checksPerService[v.ServiceID] = val
+	}
+
+	healthInfos := make([]health, 0)
+	for _, v := range services {
+		h := health {
+			Service: v,
+			Checks: checksPerService[v.ID],
+		}
+		healthInfos = append(healthInfos, h)
+	}
+	return healthInfos, nil
+}
+
 func (s *HTTPServer) AgentMembers(resp http.ResponseWriter, req *http.Request) (interface{}, error) {
 	// Fetch the ACL token, if any.
 	var token string
